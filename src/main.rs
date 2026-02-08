@@ -34,7 +34,7 @@ fn main() -> Result<()> {
     } else {
         println!("\nFound {} gone branch(es):", gone_branches.len());
         for branch in &gone_branches {
-            println!("  - {}", branch);
+            println!("  - {branch}");
         }
 
         if args.dry_run {
@@ -104,13 +104,14 @@ fn find_gone_branches(verbose: bool) -> Result<Vec<String>> {
 
     if verbose {
         println!("\nBranch output:");
-        println!("{}", stdout);
+        println!("{stdout}");
     }
 
     parse_gone_branches(&stdout)
 }
 
 /// Parses the output of `git branch -vv` to find branches with ": gone]"
+#[allow(clippy::unnecessary_wraps)]
 fn parse_gone_branches(branch_output: &str) -> Result<Vec<String>> {
     let gone_regex = Regex::new(r": gone]").unwrap();
     let current_branch_regex = Regex::new(r"^\*").unwrap();
@@ -121,7 +122,7 @@ fn parse_gone_branches(branch_output: &str) -> Result<Vec<String>> {
         .filter(|line| !current_branch_regex.is_match(line)) // Not current branch
         .filter_map(|line| {
             // Extract branch name (first non-whitespace token, possibly after '*')
-            line.trim().split_whitespace().next().map(|s| s.to_string())
+            line.split_whitespace().next().map(std::string::ToString::to_string)
         })
         .collect();
 
@@ -182,23 +183,23 @@ mod tests {
 
     #[test]
     fn test_parse_gone_branches_no_gone() {
-        let output = r#"
+        let output = r"
   feature-1    abc1234 [origin/feature-1] Some commit
   feature-2    def5678 [origin/feature-2] Another commit
 * main         ghi9012 [origin/main] Latest commit
-"#;
+";
         let branches = parse_gone_branches(output).unwrap();
         assert_eq!(branches.len(), 0);
     }
 
     #[test]
     fn test_parse_gone_branches_with_gone() {
-        let output = r#"
+        let output = r"
   feature-1    abc1234 [origin/feature-1: gone] Some commit
   feature-2    def5678 [origin/feature-2] Another commit
   old-feature  ghi9012 [origin/old-feature: gone] Old commit
 * main         jkl3456 [origin/main] Latest commit
-"#;
+";
         let branches = parse_gone_branches(output).unwrap();
         assert_eq!(branches.len(), 2);
         assert!(branches.contains(&"feature-1".to_string()));
@@ -208,10 +209,10 @@ mod tests {
 
     #[test]
     fn test_parse_gone_branches_excludes_current() {
-        let output = r#"
+        let output = r"
   feature-1    abc1234 [origin/feature-1: gone] Some commit
 * current      def5678 [origin/current: gone] Current branch
-"#;
+";
         let branches = parse_gone_branches(output).unwrap();
         assert_eq!(branches.len(), 1);
         assert_eq!(branches[0], "feature-1");
@@ -219,11 +220,11 @@ mod tests {
 
     #[test]
     fn test_parse_gone_branches_with_ahead_behind() {
-        let output = r#"
+        let output = r"
   feature-1    abc1234 [origin/feature-1: ahead 2, gone] Some commit
   feature-2    def5678 [origin/feature-2: behind 3] Another commit
   feature-3    ghi9012 [origin/feature-3: ahead 1, behind 2, gone] Mixed commit
-"#;
+";
         let branches = parse_gone_branches(output).unwrap();
         assert_eq!(branches.len(), 2);
         assert!(branches.contains(&"feature-1".to_string()));
@@ -232,11 +233,11 @@ mod tests {
 
     #[test]
     fn test_parse_gone_branches_complex_names() {
-        let output = r#"
+        let output = r"
   feature/JIRA-123    abc1234 [origin/feature/JIRA-123: gone] Ticket work
   bugfix/fix-thing    def5678 [origin/bugfix/fix-thing: gone] Bug fix
 * main                ghi9012 [origin/main] Latest
-"#;
+";
         let branches = parse_gone_branches(output).unwrap();
         assert_eq!(branches.len(), 2);
         assert!(branches.contains(&"feature/JIRA-123".to_string()));
