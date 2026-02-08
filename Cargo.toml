@@ -1,0 +1,23 @@
+[package]
+name = "git-clean-gone"
+version = "0.1.0"
+edition = "2024"
+
+description = "Run `git clean-gone` to delete any GitHub branches that've been deleted on the remote (e.g., after merging PRs)"
+license = "Unlicense"
+
+repository = "https://github.com/DeflateAwning/git-clean-gone"
+homepage = "https://github.com/DeflateAwning/git-clean-gone"
+
+keywords = ["git", "cli", "developer-tools"]
+categories = ["command-line-utilities", "development-tools"]
+
+authors = ["DeflateAwning"]
+
+
+[dependencies]
+clap = { version = "4.5.57", features = ["derive"] }
+
+[lints.clippy]
+all = "deny"
+pedantic = "deny"
