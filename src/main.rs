@@ -122,7 +122,9 @@ fn parse_gone_branches(branch_output: &str) -> Result<Vec<String>> {
         .filter(|line| !current_branch_regex.is_match(line)) // Not current branch
         .filter_map(|line| {
             // Extract branch name (first non-whitespace token, possibly after '*')
-            line.split_whitespace().next().map(std::string::ToString::to_string)
+            line.split_whitespace()
+                .next()
+                .map(std::string::ToString::to_string)
         })
         .collect();
 
